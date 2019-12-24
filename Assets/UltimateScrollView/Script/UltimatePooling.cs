@@ -40,8 +40,8 @@ namespace Hsinpa.Ultimate.Scrollview
             }
         }
 
-        public void RemoveObject(UltimateSlotObject p_object) { 
-        
+        public void RemoveObject(UltimateSlotObject p_object) {
+            p_object.Enable(false);
         }
 
         public void Release() {
@@ -57,12 +57,20 @@ namespace Hsinpa.Ultimate.Scrollview
                     slot.SetUp(slotStat);
 
                     slot.rectTransform.sizeDelta = slotStat.GetSize();
-
+                    PushToPool(id, slot);
                     return slot;
                 }
             }
 
             return null;
+        }
+
+        private void PushToPool(string id, UltimateSlotObject slotObject) {
+            if (_pooling.ContainsKey(id))
+                _pooling[id].Add(slotObject);
+            else {
+                _pooling.Add(id, new List<UltimateSlotObject>() { slotObject });
+            }
         }
 
 

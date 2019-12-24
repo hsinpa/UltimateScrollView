@@ -592,6 +592,8 @@ MonoBehaviour:
   horizontal_space: 0
   vertical_space: 0
   statHolder: {fileID: 11400000, guid: 470e20b90f7ffda41861a30bea8ab9a3, type: 2}
+  retainObjectNum: 5
+  appendObjectNum: 2
 --- !u!1 &1752690779
 GameObject:
   m_ObjectHideFlags: 0
@@ -772,11 +774,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   testset:
   - slot: {fileID: 11400000, guid: dbd381c1951ed6147a2a09d86c1d2c8c, type: 2}
-    length: 3
+    length: 5
   - slot: {fileID: 11400000, guid: de38814b668dee24fa28f4f7cbb73cb1, type: 2}
     length: 1
   - slot: {fileID: 11400000, guid: dbd381c1951ed6147a2a09d86c1d2c8c, type: 2}
-    length: 3
+    length: 5
   utimateScrollView: {fileID: 1425772330}
 --- !u!1001 &5801691317456562315
 PrefabInstance:
@@ -904,6 +906,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 640010594}
     m_Modifications:
+    - target: {fileID: 722368340256430772, guid: 29de55d6e7e81b4408768ddcba0fb9b8,
+        type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0.099975586
+      objectReference: {fileID: 0}
     - target: {fileID: 1448751552378615797, guid: 29de55d6e7e81b4408768ddcba0fb9b8,
         type: 3}
       propertyPath: m_Name
