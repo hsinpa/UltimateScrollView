@@ -14,6 +14,10 @@ namespace Hsinpa.Ultimate.Scrollview
         public Vector2 Position { get { return _Position; } }
         private Vector2 _Position;
 
+        public float GetBorderPosition() {
+            return (_Position.y - (slotStat.GetSize().y * 0.5f));
+        }
+
         public bool isEnable
         {
             get { return _slotObject != null; }

@@ -30,7 +30,6 @@ namespace Hsinpa.Ultimate.Scrollview
 
         #region Private Parameter
         private List<UltimateSlot> _slotList;
-        private List<UltimateSlotStat> _slotStatList;
 
         private int _slotListLength;
         private float _scrollViewHeight;
@@ -51,7 +50,6 @@ namespace Hsinpa.Ultimate.Scrollview
         #region Public API
         public void Setup() {
             _scrollRect = this.GetComponent<ScrollRect>();
-            _slotStatList = new List<UltimateSlotStat>();
             _slotList = new List<UltimateSlot>();
 
             if (_scrollRect.viewport != null) {
@@ -68,28 +66,38 @@ namespace Hsinpa.Ultimate.Scrollview
         public void AppendObject(UltimateSlotStat ultObject) {
                 //RectTransform slotTransform = slotObject.GetComponent<RectTransform>();
                 Vector2 slotSize = ultObject.GetSize();
-                //Debug.Log("slotObject " + slotObject.slotStat.GetSize() + ", " + slotTransform.sizeDelta);
 
-                //slotTransform.anchoredPosition = new Vector2(0, - (_scrollViewHeight + (slotSize.y *0.5f) ));
                 var ultiSlot = new UltimateSlot(ultObject);
-                ultiSlot.SetPosition(new Vector2(0, -(_scrollViewHeight + (slotSize.y * 0.5f))));
+                //ultiSlot.SetPosition(new Vector2(0, -(_scrollViewHeight + (slotSize.y * 0.5f))));
+                //Debug.Log("_scrollViewHeight " + _scrollViewHeight);
 
-                _scrollViewHeight += slotSize.y;
 
-                _slotStatList.Add(ultObject);
+                //_scrollViewHeight += slotSize.y;
 
                 _slotList.Add(ultiSlot);
 
                 _slotListLength++;
-            
+
+                UpdateElementPos(_slotListLength-1);
         }
 
         public void InsertObject(UltimateSlotStat ultObject, int index) {
+            _slotList.Insert(index, new UltimateSlot(ultObject));
             _slotListLength++;
+
+            for (int i = index; i < _slotListLength; i++) {
+                UpdateElementPos(i);
+            }
         }
 
         public void RemoveObject(int index) {
+            _slotList.RemoveAt(index);
             _slotListLength--;
+
+            for (int i = index; i < _slotListLength; i++)
+            {
+                UpdateElementPos(i);
+            }
         }
         #endregion
 
@@ -107,13 +115,14 @@ namespace Hsinpa.Ultimate.Scrollview
 
                 if (currentIndex - i < retainObjectNum) {
 
-                    //
+                    //Max Top
                     if (currentIndex - appendObjectNum > i) {
 
                         DisableObject(slot);
                         continue;
                     }
 
+                    //Max Bottom
                     if (i > currentIndex + retainObjectNum + appendObjectNum) {
                         DisableObject(slot);
                         continue;
@@ -125,41 +134,53 @@ namespace Hsinpa.Ultimate.Scrollview
                     UltimateSlotObject createObj = ultimatePooling.GetObject(slot.slotStat._id);
                     slot.SetObject(createObj);
                     createObj.Enable(true);
-
-                    slot.slotObject.rectTransform.anchoredPosition = slot.Position;
                 }
                 else {
                     slot.slotObject.Enable(true);
-                    slot.slotObject.rectTransform.anchoredPosition = slot.Position;
                 }
+
+                slot.slotObject.rectTransform.anchoredPosition = slot.Position;
+
             }
         }
 
-        private void UpdateLayoutPos() {
+        private void UpdateElementPos(int startIndex) {
+            if (startIndex < 0 || startIndex >= _slotListLength) return;
+
+            var ultiSlot = _slotList[startIndex];
+            var slotSize = ultiSlot.slotStat.GetSize();
+            float latestHeight = ((startIndex == 0) ? 0 : _slotList[startIndex-1].GetBorderPosition());
+
+            ultiSlot.SetPosition(new Vector2(0, (latestHeight - (slotSize.y * 0.5f))));
+
+            _scrollViewHeight = Mathf.Abs(latestHeight - slotSize.y);
+            Debug.Log("_scrollViewHeight " + _scrollViewHeight);
+
+        }
+
+        private void UpdateViewportPos() {
             if (isDragging) return;
 
             float viewYPos = _scrollRect.content.anchoredPosition.y;
+            float viewportSize = _scrollRect.viewport.rect.height;
 
-            if (viewYPos < 0 ) {
-                _scrollRect.content.anchoredPosition = new Vector2(0, Mathf.Lerp(viewYPos, 0, 0.1f));
+            if (viewYPos < 0 || (_scrollViewHeight < viewportSize && viewYPos > 0)) {
+                //_scrollRect.content.anchoredPosition = new Vector2(0, Mathf.Lerp(viewYPos, 0, 0.1f));
 
-                bool withInLimit = (viewYPos > -0.1);
+                bool withInLimit = (Mathf.Pow(viewYPos, 2) < 0.1);
                 float targetPos = 0;
 
                 _scrollRect.content.anchoredPosition = new Vector2(0, (withInLimit) ? targetPos : Mathf.Lerp(viewYPos, targetPos, 0.1f));
                 return;
             }
 
-            float viewportSize = _scrollRect.viewport.rect.height;
-            if (_scrollViewHeight - viewYPos < viewportSize) {
+            if (_scrollViewHeight - viewYPos < viewportSize && _scrollViewHeight > viewportSize) {
                 bool withInLimit = (_scrollViewHeight - viewportSize - viewYPos > 0.1);
                 float targetPos = _scrollViewHeight - viewportSize;
 
                 _scrollRect.content.anchoredPosition = new Vector2(0, (withInLimit) ? targetPos : Mathf.Lerp(viewYPos, targetPos, 0.1f));
-
                 return;
             }
-
         }
 
         #endregion
@@ -186,7 +207,7 @@ namespace Hsinpa.Ultimate.Scrollview
                     }
 
                     UpdateElementVisibility();
-                    UpdateLayoutPos();
+                    UpdateViewportPos();
                 }
             }
         }

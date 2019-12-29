@@ -10,6 +10,9 @@ namespace Hsinpa.Ultimate.Scrollview.Sample {
         private TestSetStats[] testset;
 
         [SerializeField]
+        private UltimateSlotStat insertSlot;
+
+        [SerializeField]
         UltimateScrollView utimateScrollView;
 
         // Start is called before the first frame update
@@ -38,6 +41,15 @@ namespace Hsinpa.Ultimate.Scrollview.Sample {
                 }
             }
             return organizedSet;
+        }
+
+        public void Insert() {
+            utimateScrollView.InsertObject(insertSlot, 0);
+        }
+
+        public void Delete()
+        {
+            utimateScrollView.RemoveObject(0);
         }
 
         [System.Serializable]

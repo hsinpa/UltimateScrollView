@@ -7,9 +7,6 @@ namespace Hsinpa.Ultimate.Scrollview
     [RequireComponent(typeof(CanvasGroup))]
     public class UltimateSlotObject : MonoBehaviour
     {
-        private UltimateSlotStat _slotStat;
-        public UltimateSlotStat slotStat { get { return _slotStat; } }
-
         private CanvasGroup _canvasGroup;
         public CanvasGroup canvasGroup { get { return _canvasGroup; } }
 
@@ -28,9 +25,8 @@ namespace Hsinpa.Ultimate.Scrollview
             canvasGroup.interactable = enable;
         }
 
-        public void SetUp(UltimateSlotStat slotStat)
+        public void SetUp()
         {
-            this._slotStat = slotStat;
             this._rectTransform = GetComponent<RectTransform>();
 
             if (_canvasGroup == null)
