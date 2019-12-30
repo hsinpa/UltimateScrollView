@@ -12,10 +12,7 @@ namespace Hsinpa.Ultimate.Scrollview
     {
         #region Inspector Parameter
         [SerializeField]
-        private float  horizontal_space;
-
-        [SerializeField]
-        private float vertical_space;
+        private float space;
 
         [SerializeField]
         private UltimateSlotHolder statHolder;
@@ -151,11 +148,13 @@ namespace Hsinpa.Ultimate.Scrollview
             var slotSize = ultiSlot.slotStat.GetSize();
             float latestHeight = ((startIndex == 0) ? 0 : _slotList[startIndex-1].GetBorderPosition());
 
-            ultiSlot.SetPosition(new Vector2(0, (latestHeight - (slotSize.y * 0.5f))));
+            float positionValue = (latestHeight - (slotSize.y * 0.5f));
+            if (startIndex > 0)
+                positionValue -= space;
+
+            ultiSlot.SetPosition(new Vector2(0, (positionValue)));
 
             _scrollViewHeight = Mathf.Abs(latestHeight - slotSize.y);
-            Debug.Log("_scrollViewHeight " + _scrollViewHeight);
-
         }
 
         private void UpdateViewportPos() {
