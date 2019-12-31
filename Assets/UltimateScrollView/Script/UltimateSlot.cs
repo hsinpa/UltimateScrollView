@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Hsinpa.Ultimate.Scrollview.Utility;
+
 namespace Hsinpa.Ultimate.Scrollview
 {
     public class UltimateSlot
@@ -14,8 +16,11 @@ namespace Hsinpa.Ultimate.Scrollview
         public Vector2 Position { get { return _Position; } }
         private Vector2 _Position;
 
-        public float GetBorderPosition() {
-            return (_Position.y - (slotStat.GetSize().y * 0.5f));
+        public float GetBorderPosition(UltimateScrollView.Direction direction) {
+            float positionValue = UtilityMethod.GetAxisValue(_Position, direction),
+                  sizeValue = UtilityMethod.GetAxisValue(slotStat.GetSize(), direction);
+
+            return (positionValue - (sizeValue * 0.5f));
         }
 
         public bool isEnable

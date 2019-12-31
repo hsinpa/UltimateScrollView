@@ -118,5 +118,29 @@ namespace Hsinpa.Ultimate.Scrollview.Utility
 		    return (T) System.Enum.Parse(typeof(T), value, true);
 		}
 
-	}
+        public static float GetAxisValue(Vector2 axis, UltimateScrollView.Direction direction) {
+            return (direction == UltimateScrollView.Direction.TopDown) ? axis.y : axis.x;
+        }
+
+        public static float GetRectValue(Rect rect, UltimateScrollView.Direction direction)
+        {
+            return (direction == UltimateScrollView.Direction.TopDown) ? rect.height : rect.width;
+        }
+
+        public static Vector2 GetDirectionVector(float mainValue, float semiValue, UltimateScrollView.Direction direction)
+        {
+            Vector2 vector = new Vector2();
+            if (direction == UltimateScrollView.Direction.TopDown) {
+                vector.x = semiValue;
+                vector.y = mainValue;
+            } else {
+                vector.x = mainValue;
+                vector.y = semiValue;
+            }
+
+            return vector;
+        }
+
+
+    }
 }
