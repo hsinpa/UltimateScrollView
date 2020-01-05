@@ -29,6 +29,10 @@ namespace Hsinpa.Ultimate.Scrollview
         private Direction directionStat;
         #endregion
 
+        #region Public Event
+        public System.Action<UltimateSlot> OnSlotCreateEvent;
+        #endregion
+
         #region Private Parameter
         private List<UltimateSlot> _slotList;
 
@@ -47,11 +51,14 @@ namespace Hsinpa.Ultimate.Scrollview
 
         private bool isDragging;
 
-        public enum Direction {TopDown, LeftRight }
+        public enum Direction {TopDown, RightLeft }
+
+        private BaseOrientation _baseOrientation;
         #endregion
 
         #region Public API
         public void Setup() {
+            _baseOrientation = GetOrientation(directionStat);
             _scrollRect = this.GetComponent<ScrollRect>();
             _slotList = new List<UltimateSlot>();
 
@@ -62,14 +69,14 @@ namespace Hsinpa.Ultimate.Scrollview
                 _scrollContent = _scrollRect.viewport;
                 visibleSize = new Vector2(_scrollContent.rect.width, _scrollContent.rect.height);
                 _scrollRect.vertical = directionStat == Direction.TopDown;
-                _scrollRect.horizontal = directionStat == Direction.LeftRight;
+                _scrollRect.horizontal = directionStat == Direction.RightLeft;
             }
 
             ultimatePooling = new UltimatePooling(statHolder, _scrollRect.content);
         }
 
-        public void AppendObject(UltimateSlotStat ultObject) {
-                var ultiSlot = new UltimateSlot(ultObject);
+        public void AppendObject(UltimateSlotStat ultObject, string custom_id = "") {
+                var ultiSlot = new UltimateSlot(ultObject, custom_id);
 
                 _slotList.Add(ultiSlot);
 
@@ -78,8 +85,8 @@ namespace Hsinpa.Ultimate.Scrollview
                 UpdateElementPos(_slotListCount-1);
         }
 
-        public void InsertObject(UltimateSlotStat ultObject, int index) {
-            _slotList.Insert(index, new UltimateSlot(ultObject));
+        public void InsertObject(UltimateSlotStat ultObject, int index, string custom_id = "") {
+            _slotList.Insert(index, new UltimateSlot(ultObject, custom_id));
             _slotListCount++;
 
             if (index < currentIndex)
@@ -91,6 +98,7 @@ namespace Hsinpa.Ultimate.Scrollview
         }
 
         public void RemoveObject(int index) {
+            DisableObject(_slotList[index]);
             _slotList.RemoveAt(index);
             _slotListCount--;
 
@@ -135,15 +143,22 @@ namespace Hsinpa.Ultimate.Scrollview
                 if (!slot.isEnable)
                 {
                     UltimateSlotObject createObj = ultimatePooling.GetObject(slot.slotStat._id);
+                    createObj.rectTransform.sizeDelta = new Vector2(visibleSize.x, createObj.rectTransform.sizeDelta.y);
+
                     slot.SetObject(createObj);
                     createObj.Enable(true);
-                }
-                else {
+
+                    if (OnSlotCreateEvent != null)
+                        OnSlotCreateEvent(slot);
+
+                } else if (!slot.slotObject.isEnable) {
                     slot.slotObject.Enable(true);
+
+                    if (OnSlotCreateEvent != null)
+                        OnSlotCreateEvent(slot);
                 }
 
                 slot.slotObject.rectTransform.anchoredPosition = slot.Position;
-
             }
         }
 
@@ -154,15 +169,24 @@ namespace Hsinpa.Ultimate.Scrollview
             var slotSize = ultiSlot.slotStat.GetSize();
 
             float slotSizeValue = UtilityMethod.GetAxisValue(slotSize, directionStat);
-            float latestHeight = ((startIndex == 0) ? 0 : _slotList[startIndex-1].GetBorderPosition(directionStat));
+            float visibleSizeValue = UtilityMethod.GetAxisValue(visibleSize, directionStat);
 
-            float positionValue = (latestHeight - (slotSizeValue * 0.5f));
-            if (startIndex > 0)
-                positionValue -= space;
+            float startPosition = _baseOrientation.GetStartPosition(visibleSizeValue, slotSizeValue);
 
-            ultiSlot.SetPosition(UtilityMethod.GetDirectionVector(positionValue, 0, directionStat));
+            //float latestHeight = ((startIndex == 0) ? 0 : _slotList[startIndex-1].GetBorderPosition(directionStat));
 
-            _scrollViewLength = Mathf.Abs(latestHeight - slotSizeValue);
+            float latestHeight = (startIndex == 0) ? startPosition : _baseOrientation.GetMaxWidthHeightValue(_slotList[startIndex - 1]);
+
+            float positionValue = _baseOrientation.GetElementMainPos(startIndex, latestHeight, slotSize, this.space);
+            //float positionValue = (latestHeight - (slotSizeValue * 0.5f));
+            //if (startIndex > 0)
+            //    positionValue -= space;
+
+            //ultiSlot.SetPosition(UtilityMethod.GetDirectionVector(positionValue, 0, directionStat));
+            ultiSlot.SetPosition(_baseOrientation.GetElementPosVector(positionValue, slotSize));
+            ultiSlot.SetIndex(startIndex);
+
+            _scrollViewLength = Mathf.Abs(latestHeight - slotSizeValue - startPosition);
         }
 
         private void UpdateViewportPos() {
@@ -171,31 +195,49 @@ namespace Hsinpa.Ultimate.Scrollview
             float viewTrackPos = UtilityMethod.GetAxisValue(_scrollRect.content.anchoredPosition, directionStat);
             float viewportSize = UtilityMethod.GetRectValue(_scrollRect.viewport.rect, directionStat);
 
+            //Debug.Log("_scrollViewLength " + _scrollViewLength);
+            //Debug.Log("viewTrackPos " + viewTrackPos);
+            //Debug.Log("viewportSize " + viewportSize);
+
             if (viewTrackPos < 0 || (_scrollViewLength < viewportSize && viewTrackPos > 0)) {
-                //_scrollRect.content.anchoredPosition = new Vector2(0, Mathf.Lerp(viewYPos, 0, 0.1f));
-
                 bool withInLimit = (Mathf.Pow(viewTrackPos, 2) < 0.1);
-                float targetPos = 0;
+                //float targetPos = 0;
 
-                _scrollRect.content.anchoredPosition = UtilityMethod.GetDirectionVector(
-                    (withInLimit) ? targetPos : Mathf.Lerp(viewTrackPos, targetPos, 0.1f),
-                    0, 
-                    directionStat);
-                    
+                //_scrollRect.content.anchoredPosition = UtilityMethod.GetDirectionVector(
+                //    (withInLimit) ? targetPos : Mathf.Lerp(viewTrackPos, targetPos, 0.1f),
+                //    0, 
+                //    directionStat);
+
+                _scrollRect.content.anchoredPosition = _baseOrientation.AlignTopTargetPos(withInLimit, _scrollViewLength, viewportSize, viewTrackPos);
                 return;
             }
 
             if (_scrollViewLength - viewTrackPos < viewportSize && _scrollViewLength > viewportSize) {
                 bool withInLimit = (_scrollViewLength - viewportSize - viewTrackPos > 0.1);
-                float targetPos = _scrollViewLength - viewportSize;
+                //float targetPos = _scrollViewLength - viewportSize;
 
-                _scrollRect.content.anchoredPosition = UtilityMethod.GetDirectionVector(
-                    (withInLimit) ? targetPos : Mathf.Lerp(viewTrackPos, targetPos, 0.1f),
-                    0,
-                    directionStat);
+                //_scrollRect.content.anchoredPosition = UtilityMethod.GetDirectionVector(
+                //    (withInLimit) ? targetPos : Mathf.Lerp(viewTrackPos, targetPos, 0.1f),
+                //    0,
+                //    directionStat);
 
+                _scrollRect.content.anchoredPosition = _baseOrientation.AlignBottomTargetPos(withInLimit, _scrollViewLength, viewportSize, viewTrackPos);
                 return;
             }
+        }
+
+        private BaseOrientation GetOrientation(Direction p_direction)
+        {
+            Dictionary<Direction, BaseOrientation> orientationTable = new Dictionary<Direction, BaseOrientation>() {
+                { Direction.TopDown, new TopDownOrientation() },
+                { Direction.RightLeft, new LeftRightOrientation() }
+            };
+
+            if (orientationTable.TryGetValue(p_direction, out BaseOrientation targetOrientation)) {
+                return targetOrientation;
+            }
+
+            return orientationTable[Direction.TopDown];
         }
 
         #endregion
@@ -211,8 +253,11 @@ namespace Hsinpa.Ultimate.Scrollview
                     float slotPosValue = UtilityMethod.GetAxisValue(_slotList[currentIndex].Position, directionStat);
                     float slotSizeValue = UtilityMethod.GetAxisValue(_slotList[currentIndex].slotStat.GetSize(), directionStat);
 
-                    currentIndexMin = - (slotPosValue + slotSizeValue * 0.5f);
-                    currentIndexMax =- (slotPosValue - slotSizeValue * 0.5f);
+                    //currentIndexMin = - (slotPosValue + slotSizeValue * 0.5f);
+                    //currentIndexMax =- (slotPosValue - slotSizeValue * 0.5f);
+
+                    currentIndexMin = _baseOrientation.GetIndexMin(slotPosValue, slotSizeValue);
+                    currentIndexMax = _baseOrientation.GetIndexMax(slotPosValue, slotSizeValue);
 
                     if (viewNavPoint > currentIndexMax && currentIndex + 1 < _slotListCount) {
                         currentIndex++;

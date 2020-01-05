@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.4465782, g: 0.49641252, b: 0.5748167, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -204,8 +204,6 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-    m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
-      Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
   m_Sprite: {fileID: 10917, guid: 0000000000000000f000000000000000, type: 0}
   m_Type: 1
   m_PreserveAspect: 0
@@ -421,7 +419,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   space: 0
   statHolder: {fileID: 11400000, guid: 470e20b90f7ffda41861a30bea8ab9a3, type: 2}
-  retainObjectNum: 10
+  retainObjectNum: 6
   appendObjectNum: 2
   directionStat: 0
 --- !u!114 &964817874
@@ -442,8 +440,6 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-    m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
-      Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
   m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
   m_Type: 1
   m_PreserveAspect: 0
@@ -491,8 +487,6 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
-    m_TypeName: UnityEngine.UI.ScrollRect+ScrollRectEvent, UnityEngine.UI, Version=1.0.0.0,
-      Culture=neutral, PublicKeyToken=null
 --- !u!224 &964817877
 RectTransform:
   m_ObjectHideFlags: 0
@@ -613,8 +607,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   testset:
   - slot: {fileID: 11400000, guid: dbd381c1951ed6147a2a09d86c1d2c8c, type: 2}
+    length: 3
+  - slot: {fileID: 11400000, guid: de38814b668dee24fa28f4f7cbb73cb1, type: 2}
     length: 1
-  insertSlot: {fileID: 11400000, guid: dbd381c1951ed6147a2a09d86c1d2c8c, type: 2}
+  - slot: {fileID: 11400000, guid: dbd381c1951ed6147a2a09d86c1d2c8c, type: 2}
+    length: 3
+  insertSlot: {fileID: 0}
   utimateScrollView: {fileID: 964817873}
 --- !u!114 &2095161339
 MonoBehaviour:

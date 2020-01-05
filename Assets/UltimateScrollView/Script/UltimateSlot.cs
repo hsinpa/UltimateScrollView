@@ -7,6 +7,12 @@ namespace Hsinpa.Ultimate.Scrollview
 {
     public class UltimateSlot
     {
+        public string custom_id { get { return _custom_id; } }
+        private string _custom_id;
+
+        public int index { get { return _index; } }
+        private int _index;
+
         public UltimateSlotObject slotObject { get { return _slotObject; } }
         private UltimateSlotObject _slotObject;
 
@@ -28,9 +34,10 @@ namespace Hsinpa.Ultimate.Scrollview
             get { return _slotObject != null; }
         }
 
-        public UltimateSlot(UltimateSlotStat slotStat)
+        public UltimateSlot(UltimateSlotStat slotStat, string custom_id)
         {
             this._slotStat = slotStat;
+            this._custom_id = custom_id;
         }
 
         public void SetPosition(Vector2 pos)
@@ -41,6 +48,11 @@ namespace Hsinpa.Ultimate.Scrollview
         public void SetObject(UltimateSlotObject slotObject)
         {
             this._slotObject = slotObject;
+        }
+
+        public void SetIndex(int index)
+        {
+            this._index = index;
         }
 
         public void DisableObj() {
