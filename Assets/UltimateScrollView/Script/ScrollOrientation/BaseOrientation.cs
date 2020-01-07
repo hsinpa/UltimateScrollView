@@ -23,9 +23,12 @@ namespace Hsinpa.Ultimate.Scrollview
         #endregion
 
         #region UpdateViewportPos
-        Vector2 AlignTopTargetPos(bool withInLimit, float scrollViewLength, float viewportSize, float viewTrackPos);
+        Vector2 AlignTopTargetPos(float scrollViewLength, float viewportSize, float viewTrackPos);
+        Vector2 AlignBottomTargetPos(float scrollViewLength, float viewportSize, float viewTrackPos);
 
-        Vector2 AlignBottomTargetPos(bool withInLimit, float scrollViewLength, float viewportSize, float viewTrackPos);
+        bool AlignTopValidation(float viewTrackPos, float scrollViewLength, float viewportSize);
+        bool AlignBottomValidation(float viewTrackPos, float scrollViewLength, float viewportSize);
+
         #endregion
     }
 }

@@ -22,13 +22,6 @@ namespace Hsinpa.Ultimate.Scrollview
         public Vector2 Position { get { return _Position; } }
         private Vector2 _Position;
 
-        public float GetBorderPosition(UltimateScrollView.Direction direction) {
-            float positionValue = UtilityMethod.GetAxisValue(_Position, direction),
-                  sizeValue = UtilityMethod.GetAxisValue(slotStat.GetSize(), direction);
-
-            return (positionValue - (sizeValue * 0.5f));
-        }
-
         public bool isEnable
         {
             get { return _slotObject != null; }

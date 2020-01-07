@@ -51,9 +51,10 @@ namespace Hsinpa.Ultimate.Scrollview
 
         private bool isDragging;
 
-        public enum Direction {TopDown, RightLeft }
+        public enum Direction {TopDown, RightLeft, LeftRight }
 
         private BaseOrientation _baseOrientation;
+        private Vector2 screenResolution;
         #endregion
 
         #region Public API
@@ -69,8 +70,9 @@ namespace Hsinpa.Ultimate.Scrollview
                 _scrollContent = _scrollRect.viewport;
                 visibleSize = new Vector2(_scrollContent.rect.width, _scrollContent.rect.height);
                 _scrollRect.vertical = directionStat == Direction.TopDown;
-                _scrollRect.horizontal = directionStat == Direction.RightLeft;
+                _scrollRect.horizontal = directionStat != Direction.TopDown;
             }
+            screenResolution = new Vector2(Screen.width, Screen.height);
 
             ultimatePooling = new UltimatePooling(statHolder, _scrollRect.content);
         }
@@ -143,7 +145,7 @@ namespace Hsinpa.Ultimate.Scrollview
                 if (!slot.isEnable)
                 {
                     UltimateSlotObject createObj = ultimatePooling.GetObject(slot.slotStat._id);
-                    createObj.rectTransform.sizeDelta = new Vector2(visibleSize.x, createObj.rectTransform.sizeDelta.y);
+                    createObj.rectTransform.sizeDelta = GetObjectPhysicalSize(createObj.rectTransform.sizeDelta);
 
                     slot.SetObject(createObj);
                     createObj.Enable(true);
@@ -153,6 +155,8 @@ namespace Hsinpa.Ultimate.Scrollview
 
                 } else if (!slot.slotObject.isEnable) {
                     slot.slotObject.Enable(true);
+
+                    slot.slotObject.rectTransform.sizeDelta = GetObjectPhysicalSize(slot.slotObject.rectTransform.sizeDelta);
 
                     if (OnSlotCreateEvent != null)
                         OnSlotCreateEvent(slot);
@@ -183,7 +187,7 @@ namespace Hsinpa.Ultimate.Scrollview
             //    positionValue -= space;
 
             //ultiSlot.SetPosition(UtilityMethod.GetDirectionVector(positionValue, 0, directionStat));
-            ultiSlot.SetPosition(_baseOrientation.GetElementPosVector(positionValue, slotSize));
+            ultiSlot.SetPosition(_baseOrientation.GetElementPosVector(positionValue, visibleSize));
             ultiSlot.SetIndex(startIndex);
 
             _scrollViewLength = Mathf.Abs(latestHeight - slotSizeValue - startPosition);
@@ -199,7 +203,9 @@ namespace Hsinpa.Ultimate.Scrollview
             //Debug.Log("viewTrackPos " + viewTrackPos);
             //Debug.Log("viewportSize " + viewportSize);
 
-            if (viewTrackPos < 0 || (_scrollViewLength < viewportSize && viewTrackPos > 0)) {
+            if (_baseOrientation.AlignTopValidation(viewTrackPos, _scrollViewLength, viewportSize)) 
+            { 
+                //viewTrackPos < 0 || (_scrollViewLength < viewportSize && viewTrackPos > 0)) {
                 bool withInLimit = (Mathf.Pow(viewTrackPos, 2) < 0.1);
                 //float targetPos = 0;
 
@@ -208,12 +214,14 @@ namespace Hsinpa.Ultimate.Scrollview
                 //    0, 
                 //    directionStat);
 
-                _scrollRect.content.anchoredPosition = _baseOrientation.AlignTopTargetPos(withInLimit, _scrollViewLength, viewportSize, viewTrackPos);
+                _scrollRect.content.anchoredPosition = _baseOrientation.AlignTopTargetPos(_scrollViewLength, viewportSize, viewTrackPos);
                 return;
             }
 
-            if (_scrollViewLength - viewTrackPos < viewportSize && _scrollViewLength > viewportSize) {
-                bool withInLimit = (_scrollViewLength - viewportSize - viewTrackPos > 0.1);
+            if (_baseOrientation.AlignBottomValidation(viewTrackPos, _scrollViewLength, viewportSize))
+            {
+                //_scrollViewLength - viewTrackPos < viewportSize && _scrollViewLength > viewportSize) {
+                //bool withInLimit = (_scrollViewLength - viewportSize - viewTrackPos > 0.1);
                 //float targetPos = _scrollViewLength - viewportSize;
 
                 //_scrollRect.content.anchoredPosition = UtilityMethod.GetDirectionVector(
@@ -221,7 +229,7 @@ namespace Hsinpa.Ultimate.Scrollview
                 //    0,
                 //    directionStat);
 
-                _scrollRect.content.anchoredPosition = _baseOrientation.AlignBottomTargetPos(withInLimit, _scrollViewLength, viewportSize, viewTrackPos);
+                _scrollRect.content.anchoredPosition = _baseOrientation.AlignBottomTargetPos(_scrollViewLength, viewportSize, viewTrackPos);
                 return;
             }
         }
@@ -230,7 +238,8 @@ namespace Hsinpa.Ultimate.Scrollview
         {
             Dictionary<Direction, BaseOrientation> orientationTable = new Dictionary<Direction, BaseOrientation>() {
                 { Direction.TopDown, new TopDownOrientation() },
-                { Direction.RightLeft, new LeftRightOrientation() }
+                { Direction.RightLeft, new RightLeftOrientation() },
+                { Direction.LeftRight, new LeftRightOrientation() }
             };
 
             if (orientationTable.TryGetValue(p_direction, out BaseOrientation targetOrientation)) {
@@ -238,6 +247,33 @@ namespace Hsinpa.Ultimate.Scrollview
             }
 
             return orientationTable[Direction.TopDown];
+        }
+
+        private void UpdateOnScreenResize()
+        {
+            if (screenResolution.x != Screen.width || screenResolution.y != Screen.height)
+            {
+                visibleSize = new Vector2(_scrollContent.rect.width, _scrollContent.rect.height);
+
+                for (int i = 0; i < _slotListCount; i++)
+                {
+                    var slot = _slotList[i];
+                    if (slot.isEnable) {
+                        slot.slotObject.rectTransform.sizeDelta = GetObjectPhysicalSize(slot.slotObject.rectTransform.sizeDelta);
+                    }
+                }
+
+                screenResolution.x = Screen.width;
+                screenResolution.y = Screen.height;
+            }
+        }
+
+
+        private Vector2 GetObjectPhysicalSize(Vector2 oriObjSize) {
+            Vector2 size = new Vector2();
+            size.x = (directionStat == Direction.TopDown) ? visibleSize.x : oriObjSize.x;
+            size.y = (directionStat == Direction.TopDown) ? oriObjSize.y : visibleSize.y;
+            return size;
         }
 
         #endregion
@@ -273,6 +309,8 @@ namespace Hsinpa.Ultimate.Scrollview
                     UpdateViewportPos();
                 }
             }
+
+            UpdateOnScreenResize();
         }
 
         public void OnEndDrag(PointerEventData eventData)

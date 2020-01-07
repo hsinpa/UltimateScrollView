@@ -13,7 +13,6 @@ namespace Hsinpa.Ultimate.Scrollview
         private RectTransform _rectTransform;
         public RectTransform rectTransform { get { return _rectTransform; } }
 
-
         public bool isEnable {
             get { return _canvasGroup.alpha == 1; }
         }

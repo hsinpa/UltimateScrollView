@@ -55,7 +55,6 @@ namespace Hsinpa.Ultimate.Scrollview
                     var slot = UtilityMethod.CreateObjectToParent(_parentTransform, slotStat._prefab.gameObject).GetComponent<UltimateSlotObject>();
 
                     slot.SetUp();
-
                     slot.rectTransform.sizeDelta = slotStat.GetSize();
                     PushToPool(id, slot);
                     return slot;

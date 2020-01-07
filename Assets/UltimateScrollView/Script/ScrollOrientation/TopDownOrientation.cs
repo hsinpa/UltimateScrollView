@@ -47,21 +47,35 @@ namespace Hsinpa.Ultimate.Scrollview {
             return -(slotPosValue + slotSizeValue * 0.5f);
         }
 
-        public Vector2 AlignTopTargetPos(bool withInLimit, float scrollViewLength, float viewportSize, float viewTrackPos)
+        public Vector2 AlignTopTargetPos(float scrollViewLength, float viewportSize, float viewTrackPos)
         {
+            bool withInLimit = (Mathf.Pow(viewTrackPos, 2) < 0.1);
             float targetPos = 0;
 
             return UtilityMethod.GetDirectionVector((withInLimit) ? targetPos : Mathf.Lerp(viewTrackPos, targetPos, 0.1f), 
                 0, UltimateScrollView.Direction.TopDown);
         }
 
-        public Vector2 AlignBottomTargetPos(bool withInLimit, float scrollViewLength, float viewportSize, float viewTrackPos)
+        public Vector2 AlignBottomTargetPos(float scrollViewLength, float viewportSize, float viewTrackPos)
         {
+            bool withInLimit = (scrollViewLength - viewportSize - viewTrackPos > 0.1);
             float targetPos = scrollViewLength - viewportSize;
 
             return UtilityMethod.GetDirectionVector(
                 (withInLimit) ? targetPos : Mathf.Lerp(viewTrackPos, targetPos, 0.1f), 
                 0, UltimateScrollView.Direction.TopDown);
         }
+
+        public bool AlignTopValidation(float viewTrackPos, float scrollViewLength, float viewportSize)
+        {
+            return viewTrackPos < 0 || (scrollViewLength < viewportSize && viewTrackPos > 0);
+        }
+
+        public bool AlignBottomValidation(float viewTrackPos, float scrollViewLength, float viewportSize)
+        {
+            return scrollViewLength - viewTrackPos < viewportSize && scrollViewLength > viewportSize;
+        }
+
+
     }
 }
