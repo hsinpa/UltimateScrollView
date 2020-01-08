@@ -43,6 +43,7 @@ namespace Hsinpa.Ultimate.Scrollview
         private float currentIndexMax = 0;
         private float currentIndexMin = 0;
 
+        private RectTransform _scrollViewport;
         private RectTransform _scrollContent;
         private Vector2 visibleSize;
 
@@ -52,8 +53,9 @@ namespace Hsinpa.Ultimate.Scrollview
         private bool isDragging;
 
         public enum Direction {TopDown, RightLeft, LeftRight }
-
         private BaseOrientation _baseOrientation;
+
+        //Monitor Window resize
         private Vector2 screenResolution;
         #endregion
 
@@ -67,8 +69,9 @@ namespace Hsinpa.Ultimate.Scrollview
                 //Clear up
                 Utility.UtilityMethod.ClearChildObject(_scrollRect.content);
 
-                _scrollContent = _scrollRect.viewport;
-                visibleSize = new Vector2(_scrollContent.rect.width, _scrollContent.rect.height);
+                _scrollViewport = _scrollRect.viewport;
+                _scrollContent = _scrollRect.content;
+                visibleSize = new Vector2(_scrollViewport.rect.width, _scrollViewport.rect.height);
                 _scrollRect.vertical = directionStat == Direction.TopDown;
                 _scrollRect.horizontal = directionStat != Direction.TopDown;
             }
@@ -126,21 +129,18 @@ namespace Hsinpa.Ultimate.Scrollview
             for (int i = 0; i < _slotListCount; i++) {
                 var slot = _slotList[i];
 
-                //if (currentIndex - i < retainObjectNum) {
+                //Max Top
+                if (currentIndex - appendObjectNum > i) {
 
-                    //Max Top
-                    if (currentIndex - appendObjectNum > i) {
+                    DisableObject(slot);
+                    continue;
+                }
 
-                        DisableObject(slot);
-                        continue;
-                    }
-
-                    //Max Bottom
-                    if (i > currentIndex + retainObjectNum + appendObjectNum) {
-                        DisableObject(slot);
-                        continue;
-                    }
-                //}
+                //Max Bottom
+                if (i > currentIndex + retainObjectNum + appendObjectNum) {
+                    DisableObject(slot);
+                    continue;
+                }
 
                 if (!slot.isEnable)
                 {
@@ -175,22 +175,19 @@ namespace Hsinpa.Ultimate.Scrollview
             float slotSizeValue = UtilityMethod.GetAxisValue(slotSize, directionStat);
             float visibleSizeValue = UtilityMethod.GetAxisValue(visibleSize, directionStat);
 
+            //Beginning position for every slot
             float startPosition = _baseOrientation.GetStartPosition(visibleSizeValue, slotSizeValue);
-
-            //float latestHeight = ((startIndex == 0) ? 0 : _slotList[startIndex-1].GetBorderPosition(directionStat));
-
             float latestHeight = (startIndex == 0) ? startPosition : _baseOrientation.GetMaxWidthHeightValue(_slotList[startIndex - 1]);
 
             float positionValue = _baseOrientation.GetElementMainPos(startIndex, latestHeight, slotSize, this.space);
-            //float positionValue = (latestHeight - (slotSizeValue * 0.5f));
-            //if (startIndex > 0)
-            //    positionValue -= space;
 
-            //ultiSlot.SetPosition(UtilityMethod.GetDirectionVector(positionValue, 0, directionStat));
             ultiSlot.SetPosition(_baseOrientation.GetElementPosVector(positionValue, visibleSize));
             ultiSlot.SetIndex(startIndex);
 
             _scrollViewLength = Mathf.Abs(latestHeight - slotSizeValue - startPosition);
+
+            //ScrollBar now only support topdown
+            _scrollContent.sizeDelta = new Vector2(0, _scrollViewLength);
         }
 
         private void UpdateViewportPos() {
@@ -203,32 +200,16 @@ namespace Hsinpa.Ultimate.Scrollview
             //Debug.Log("viewTrackPos " + viewTrackPos);
             //Debug.Log("viewportSize " + viewportSize);
 
+            //Align ScrollRect On top, if condition meet
             if (_baseOrientation.AlignTopValidation(viewTrackPos, _scrollViewLength, viewportSize)) 
             { 
-                //viewTrackPos < 0 || (_scrollViewLength < viewportSize && viewTrackPos > 0)) {
-                bool withInLimit = (Mathf.Pow(viewTrackPos, 2) < 0.1);
-                //float targetPos = 0;
-
-                //_scrollRect.content.anchoredPosition = UtilityMethod.GetDirectionVector(
-                //    (withInLimit) ? targetPos : Mathf.Lerp(viewTrackPos, targetPos, 0.1f),
-                //    0, 
-                //    directionStat);
-
                 _scrollRect.content.anchoredPosition = _baseOrientation.AlignTopTargetPos(_scrollViewLength, viewportSize, viewTrackPos);
                 return;
             }
 
+            //Align ScrollRect On bottom, if condition meet
             if (_baseOrientation.AlignBottomValidation(viewTrackPos, _scrollViewLength, viewportSize))
             {
-                //_scrollViewLength - viewTrackPos < viewportSize && _scrollViewLength > viewportSize) {
-                //bool withInLimit = (_scrollViewLength - viewportSize - viewTrackPos > 0.1);
-                //float targetPos = _scrollViewLength - viewportSize;
-
-                //_scrollRect.content.anchoredPosition = UtilityMethod.GetDirectionVector(
-                //    (withInLimit) ? targetPos : Mathf.Lerp(viewTrackPos, targetPos, 0.1f),
-                //    0,
-                //    directionStat);
-
                 _scrollRect.content.anchoredPosition = _baseOrientation.AlignBottomTargetPos(_scrollViewLength, viewportSize, viewTrackPos);
                 return;
             }
@@ -253,7 +234,7 @@ namespace Hsinpa.Ultimate.Scrollview
         {
             if (screenResolution.x != Screen.width || screenResolution.y != Screen.height)
             {
-                visibleSize = new Vector2(_scrollContent.rect.width, _scrollContent.rect.height);
+                visibleSize = new Vector2(_scrollViewport.rect.width, _scrollViewport.rect.height);
 
                 for (int i = 0; i < _slotListCount; i++)
                 {
@@ -289,20 +270,16 @@ namespace Hsinpa.Ultimate.Scrollview
                     float slotPosValue = UtilityMethod.GetAxisValue(_slotList[currentIndex].Position, directionStat);
                     float slotSizeValue = UtilityMethod.GetAxisValue(_slotList[currentIndex].slotStat.GetSize(), directionStat);
 
-                    //currentIndexMin = - (slotPosValue + slotSizeValue * 0.5f);
-                    //currentIndexMax =- (slotPosValue - slotSizeValue * 0.5f);
-
+                    //Tracking the first, last index on screen
                     currentIndexMin = _baseOrientation.GetIndexMin(slotPosValue, slotSizeValue);
                     currentIndexMax = _baseOrientation.GetIndexMax(slotPosValue, slotSizeValue);
 
                     if (viewNavPoint > currentIndexMax && currentIndex + 1 < _slotListCount) {
                         currentIndex++;
-                        //Debug.Log("currentIndex " + currentIndex);
                     }
 
                     if (viewNavPoint < currentIndexMin && currentIndex - 1 >= 0) {
                         currentIndex--;
-                        //Debug.Log("currentIndex " + currentIndex);
                     }
 
                     UpdateElementVisibility();
@@ -322,7 +299,6 @@ namespace Hsinpa.Ultimate.Scrollview
         {
             isDragging = true;
         }
-
         #endregion
 
     }
