@@ -17,7 +17,7 @@ namespace Hsinpa.Ultimate.Scrollview
         private float space;
 
         [SerializeField]
-        private UltimateSlotHolder statHolder;
+        private UltimateSlotHolder _statHolder;
 
         [SerializeField, Range(2,50)]
         private int retainObjectNum = 2;
@@ -29,8 +29,11 @@ namespace Hsinpa.Ultimate.Scrollview
         private Direction directionStat;
         #endregion
 
-        #region Public Event
+        #region Public Variable
+        public ScrollRect scrollRect => this._scrollRect;
+        public UltimateSlotHolder statHolder => this._statHolder;
         public System.Action<UltimateSlot> OnSlotCreateEvent;
+        public System.Action OnLastScrollSlot;
         #endregion
 
         #region Private Parameter
@@ -66,18 +69,21 @@ namespace Hsinpa.Ultimate.Scrollview
             _slotList = new List<UltimateSlot>();
 
             if (_scrollRect.viewport != null) {
+                screenResolution = new Vector2(Screen.width, Screen.height);
+
+                ultimatePooling = new UltimatePooling(_statHolder, _scrollRect.content);
+
                 //Clear up
-                Utility.UtilityMethod.ClearChildObject(_scrollRect.content);
+                CleanUp();
 
                 _scrollViewport = _scrollRect.viewport;
                 _scrollContent = _scrollRect.content;
                 visibleSize = new Vector2(_scrollViewport.rect.width, _scrollViewport.rect.height);
+
+                Debug.Log("_scrollViewport " + visibleSize);
                 _scrollRect.vertical = directionStat == Direction.TopDown;
                 _scrollRect.horizontal = directionStat != Direction.TopDown;
             }
-            screenResolution = new Vector2(Screen.width, Screen.height);
-
-            ultimatePooling = new UltimatePooling(statHolder, _scrollRect.content);
         }
 
         public void AppendObject(UltimateSlotStat ultObject, string custom_id = "") {
@@ -115,6 +121,19 @@ namespace Hsinpa.Ultimate.Scrollview
                 UpdateElementPos(i);
             }
         }
+
+        public void CleanUp() {
+            ultimatePooling.Release();
+            Utility.UtilityMethod.ClearChildObject(_scrollRect.content);
+            _slotList.Clear();
+            currentIndex = 0;
+            _slotListCount = 0;
+            _scrollViewLength = 0;
+        }
+
+        public int FindSlotIndexById(string p_id) {
+            return _slotList.FindLastIndex(x => x.custom_id == p_id);
+        }
         #endregion
 
         #region Private API
@@ -145,6 +164,8 @@ namespace Hsinpa.Ultimate.Scrollview
                 if (!slot.isEnable)
                 {
                     UltimateSlotObject createObj = ultimatePooling.GetObject(slot.slotStat._id);
+                    visibleSize = new Vector2(_scrollViewport.rect.width, _scrollViewport.rect.height);
+
                     createObj.rectTransform.sizeDelta = GetObjectPhysicalSize(createObj.rectTransform.sizeDelta);
 
                     slot.SetObject(createObj);
@@ -281,6 +302,9 @@ namespace Hsinpa.Ultimate.Scrollview
                     if (viewNavPoint < currentIndexMin && currentIndex - 1 >= 0) {
                         currentIndex--;
                     }
+
+                    if (currentIndex == currentIndexMax && OnLastScrollSlot != null)
+                        OnLastScrollSlot();
 
                     UpdateElementVisibility();
                     UpdateViewportPos();
