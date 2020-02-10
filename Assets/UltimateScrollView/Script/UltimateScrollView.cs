@@ -43,8 +43,6 @@ namespace Hsinpa.Ultimate.Scrollview
         private float _scrollViewLength;
 
         private int currentIndex = 0;
-        private float currentIndexMax = 0;
-        private float currentIndexMin = 0;
 
         private RectTransform _scrollViewport;
         private RectTransform _scrollContent;
@@ -232,6 +230,12 @@ namespace Hsinpa.Ultimate.Scrollview
             if (_baseOrientation.AlignBottomValidation(viewTrackPos, _scrollViewLength, viewportSize))
             {
                 _scrollRect.content.anchoredPosition = _baseOrientation.AlignBottomTargetPos(_scrollViewLength, viewportSize, viewTrackPos);
+
+                if (OnLastScrollSlot != null)
+                {
+                    OnLastScrollSlot();
+                }
+
                 return;
             }
         }
@@ -278,6 +282,35 @@ namespace Hsinpa.Ultimate.Scrollview
             return size;
         }
 
+        private int FindCurrentIndex(int startIndex, float viewNavPoint)
+        {
+            int _currentIndex = startIndex;
+
+            if (_currentIndex >= 0 && _currentIndex < _slotListCount)
+            {
+                float slotPosValue = UtilityMethod.GetAxisValue(_slotList[_currentIndex].Position, directionStat);
+                float slotSizeValue = UtilityMethod.GetAxisValue(_slotList[_currentIndex].slotStat.GetSize(), directionStat);
+
+                float currentIndexMin = _baseOrientation.GetIndexMin(slotPosValue, slotSizeValue);
+                float currentIndexMax = _baseOrientation.GetIndexMax(slotPosValue, slotSizeValue);
+
+                if (viewNavPoint <= currentIndexMax && viewNavPoint >= currentIndexMin)
+                    return _currentIndex;
+
+                if (viewNavPoint > currentIndexMax && currentIndex + 1 < _slotListCount)
+                {
+                    return FindCurrentIndex(_currentIndex + 1, viewNavPoint);
+                }
+
+                if (viewNavPoint < currentIndexMin && currentIndex - 1 >= 0)
+                {
+                    return FindCurrentIndex(_currentIndex - 1, viewNavPoint);
+                }
+            }
+
+            return _currentIndex;
+        }
+
         #endregion
 
         #region Monobehavior
@@ -288,23 +321,7 @@ namespace Hsinpa.Ultimate.Scrollview
                 float viewNavPoint = UtilityMethod.GetAxisValue(_scrollRect.content.anchoredPosition, directionStat);
 
                 if (currentIndex >= 0 && currentIndex < _slotListCount) {
-                    float slotPosValue = UtilityMethod.GetAxisValue(_slotList[currentIndex].Position, directionStat);
-                    float slotSizeValue = UtilityMethod.GetAxisValue(_slotList[currentIndex].slotStat.GetSize(), directionStat);
-
-                    //Tracking the first, last index on screen
-                    currentIndexMin = _baseOrientation.GetIndexMin(slotPosValue, slotSizeValue);
-                    currentIndexMax = _baseOrientation.GetIndexMax(slotPosValue, slotSizeValue);
-
-                    if (viewNavPoint > currentIndexMax && currentIndex + 1 < _slotListCount) {
-                        currentIndex++;
-                    }
-
-                    if (viewNavPoint < currentIndexMin && currentIndex - 1 >= 0) {
-                        currentIndex--;
-                    }
-
-                    if (currentIndex == currentIndexMax && OnLastScrollSlot != null)
-                        OnLastScrollSlot();
+                    currentIndex = FindCurrentIndex(currentIndex, viewNavPoint);
 
                     UpdateElementVisibility();
                     UpdateViewportPos();
@@ -313,6 +330,8 @@ namespace Hsinpa.Ultimate.Scrollview
 
             UpdateOnScreenResize();
         }
+
+        
 
         public void OnEndDrag(PointerEventData eventData)
         {
